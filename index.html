@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nature MBTI</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background: url("https://images.unsplash.com/photo-1501785888041-af3ef285b470") no-repeat center center/cover;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(15px);
+  padding: 30px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 500px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0,0,0,0.3);
+}
+
+h1 {
+  margin-bottom: 20px;
+}
+
+select, input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #00c853;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00b248;
+}
+
+.result {
+  margin-top: 15px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+@media(max-width: 600px){
+  .card{
+    padding:20px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h1>🌿 Nature MBTI Test</h1>
+
+<h3>Register / Login</h3>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+
+<hr style="margin:20px 0;">
+
+<h3>Test</h3>
+
+<select id="q1">
+<option value="E">Хүмүүстэй хамт байх дуртай</option>
+<option value="I">Ганцаараа байх дуртай</option>
+</select>
+
+<select id="q2">
+<option value="S">Бодит зүйлд анхаардаг</option>
+<option value="N">Төсөөлөлд анхаардаг</option>
+</select>
+
+<select id="q3">
+<option value="T">Логик шийдвэр</option>
+<option value="F">Мэдрэмж шийдвэр</option>
+</select>
+
+<select id="q4">
+<option value="J">Төлөвлөгөөтэй</option>
+<option value="P">Чөлөөтэй</option>
+</select>
+
+<button onclick="calculateMBTI()">Үр дүн харах</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<script type="module">
+
+// 🔥 Firebase Import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, addDoc, collection } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ⚠️ Энд Firebase config-аа paste хийнэ
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 🔐 Register
+window.register = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Амжилттай бүртгэгдлээ!"))
+    .catch(error => alert(error.message));
+}
+
+// 🔐 Login
+window.login = function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(() => alert("Амжилттай нэвтэрлээ!"))
+    .catch(error => alert(error.message));
+}
+
+// 🧠 MBTI тайлбар
+const descriptions = {
+  INTJ: "Стратегич – Алсын хараатай.",
+  ENFP: "Идэвхтэн – Эрч хүчтэй.",
+  ISTJ: "Хариуцлагатай.",
+  INFJ: "Зөвлөх.",
+  // Бусдыг нэмэж болно
+};
+
+// 🧠 Calculate
+window.calculateMBTI = async function() {
+  const mbti =
+    document.getElementById("q1").value +
+    document.getElementById("q2").value +
+    document.getElementById("q3").value +
+    document.getElementById("q4").value;
+
+  document.getElementById("result").innerHTML =
+    "Таны төрөл: " + mbti + "<br>" +
+    (descriptions[mbti] || "Тайлбар нэмнэ үү.");
+
+  if(auth.currentUser){
+    await addDoc(collection(db, "results"), {
+      email: auth.currentUser.email,
+      mbti: mbti,
+      date: new Date()
+    });
+  }
+}
+
+</script>
+</body>
+</html>
